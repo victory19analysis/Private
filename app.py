@@ -92,7 +92,7 @@ def parse_batting_line(line):
         else:
             how_out = 'other'
     return dict(name=name, runs=runs, balls=balls, fours=fours, sixes=sixes,
-                out=is_out, how_out=how_out)
+                out=is_out, how_out=how_out, position=0)  # position overwritten by caller
 
 def parse_bowling_line(line):
     line = line.strip()
@@ -201,7 +201,7 @@ def build_player_batting(all_innings):
             p['seasons'].add(inn['season'])
             if r['out']:
                 p['outs'] += 1
-                h = r['how_out']
+                h = r.get('how_out', 'other')  # defensive for stale cached data
                 if h == 'caught':    p['caught']   += 1
                 elif h == 'bowled':  p['bowled']   += 1
                 elif h == 'lbw':     p['lbw']      += 1
@@ -368,6 +368,21 @@ def ops_filter(df, col, op_str, val):
     sub = df[df[col].notna()]
     return sub[fn(sub[col], val)]
 
+def _hex_to_rgba(hex_str, alpha=0.85):
+    """Convert '#rrggbb' or 'rgb(r,g,b)' to rgba string safely."""
+    h = hex_str.strip()
+    if h.startswith('#'):
+        h = h.lstrip('#')
+        if len(h) == 3:
+            h = ''.join(c*2 for c in h)
+        r, g, b = int(h[0:2],16), int(h[2:4],16), int(h[4:6],16)
+        return f'rgba({r},{g},{b},{alpha})'
+    if h.startswith('rgb'):
+        nums = re.findall(r'[\d.]+', h)
+        r,g,b = int(float(nums[0])), int(float(nums[1])), int(float(nums[2]))
+        return f'rgba({r},{g},{b},{alpha})'
+    return f'rgba(99,130,246,{alpha})'
+
 def make_scatter(df, x, y, text_col, color_col, size_col, x_label, y_label,
                  color_scale='RdYlGn', fixed_size=None):
     """Build a Plotly scatter. fixed_size=N gives uniform bubbles (bowling graphs)."""
@@ -379,9 +394,13 @@ def make_scatter(df, x, y, text_col, color_col, size_col, x_label, y_label,
 
     def get_color(val):
         if c_max == c_min: return 'rgba(99,130,246,0.8)'
-        t = (val - c_min) / (c_max - c_min)
-        rgb = pc.sample_colorscale(colorscale, t)[0]
-        r,g,b = [int(x*255) for x in rgb]
+        t = float(max(0.0, min(1.0, (val - c_min) / (c_max - c_min))))
+        sampled = pc.sample_colorscale(colorscale, t)[0]
+        # sample_colorscale may return a hex string or an rgb tuple depending on version
+        if isinstance(sampled, str):
+            return _hex_to_rgba(sampled)
+        # it's a tuple of floats (0-1)
+        r, g, b = int(sampled[0]*255), int(sampled[1]*255), int(sampled[2]*255)
         return f'rgba({r},{g},{b},0.85)'
 
     if fixed_size is not None:
