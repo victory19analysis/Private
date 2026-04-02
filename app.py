@@ -409,8 +409,8 @@ def bat_graphs_player(df,fmt):
             st.caption("Strike Rate vs Average  (bubble = innings)")
             st.plotly_chart(make_scatter(df,"Average","StrikeRate","Player","StrikeRate","Innings","Average","Strike Rate","RdYlGn"),use_container_width=True)
         with g2:
-            st.caption("Boundary% vs Non-Boundary%  (bubble = runs)")
-            st.plotly_chart(make_scatter(df,"BoundaryPct","DotPct","Player","DotPct","Runs","Boundary %","Non-Boundary %","Blues_r"),use_container_width=True)
+            st.caption("Caught% vs Bowled%  (bubble = innings) — how each player gets out")
+            st.plotly_chart(make_scatter(df,"CatchPct","BowledPct","Player","BowledPct","Innings","Caught %","Bowled %","RdYlGn"),use_container_width=True)
     else:  # Test
         with g1:
             st.caption("Batting Average vs Balls Faced  (bubble = innings)")
@@ -426,8 +426,8 @@ def bat_graphs_team(df,fmt):
             st.caption("Team Strike Rate vs Total Runs  (bubble = innings)")
             st.plotly_chart(make_scatter(df,"TotalRuns","TeamSR","Team","TeamSR","InningsCount","Total Runs","Strike Rate","RdYlGn"),use_container_width=True)
         with g2:
-            st.caption("Boundary% vs Non-Boundary%  (bubble = innings)")
-            st.plotly_chart(make_scatter(df,"BoundaryPct","DotPct","Team","DotPct","InningsCount","Boundary %","Non-Boundary %","Blues_r"),use_container_width=True)
+            st.caption("Boundary% vs Six%  (bubble = innings)")
+            st.plotly_chart(make_scatter(df,"BoundaryPct","SixPct","Team","SixPct","InningsCount","Boundary %","Six %","Blues"),use_container_width=True)
     else:  # Test
         with g1:
             st.caption("Avg Score vs Total Balls Faced  (bubble = innings)")
@@ -496,13 +496,13 @@ def bowl_graphs_team(df,fmt):
 def bat_table(df):
     cols=["Player","Team","Innings","Runs","Balls","Fours","Sixes",
           "HighScore","Hundreds","Fifties","Average","StrikeRate",
-          "BoundaryPct","SixPct","DotPct","CatchPct","BowledPct","LBWPct",
+          "BoundaryPct","SixPct","CatchPct","BowledPct","LBWPct",
           "StumpedPct","RunOutPct","Outs","NotOuts"]
     show=df[[c for c in cols if c in df.columns]].sort_values("Runs",ascending=False)
-    show=show.rename(columns={"StrikeRate":"SR","BoundaryPct":"Bdry%","SixPct":"Six%","DotPct":"NBall%",
+    show=show.rename(columns={"StrikeRate":"SR","BoundaryPct":"Bdry%","SixPct":"Six%",
         "CatchPct":"Ct%","BowledPct":"Bwld%","LBWPct":"LBW%","StumpedPct":"St%","RunOutPct":"RO%",
         "HighScore":"HS","NotOuts":"NO"})
-    fmt_cols={c:st.column_config.NumberColumn(format="%.1f") for c in ["SR","Average","Bdry%","Six%","NBall%","Ct%","Bwld%","LBW%","St%","RO%"]}
+    fmt_cols={c:st.column_config.NumberColumn(format="%.1f") for c in ["SR","Average","Bdry%","Six%","Ct%","Bwld%","LBW%","St%","RO%"]}
     st.dataframe(show.reset_index(drop=True),use_container_width=True,hide_index=True,column_config=fmt_cols)
 
 def bowl_table(df):
@@ -513,11 +513,11 @@ def bowl_table(df):
     st.dataframe(show.reset_index(drop=True),use_container_width=True,hide_index=True,column_config=fmt_cols)
 
 def team_bat_table(df):
-    cols=["Team","InningsCount","TotalRuns","AvgScore","TotalBalls","TotalFours","TotalSixes","TeamSR","BoundaryPct","SixPct","DotPct"]
+    cols=["Team","InningsCount","TotalRuns","AvgScore","TotalBalls","TotalFours","TotalSixes","TeamSR","BoundaryPct","SixPct"]
     show=df[[c for c in cols if c in df.columns]].sort_values("TotalRuns",ascending=False)
     show=show.rename(columns={"InningsCount":"Inn","TotalRuns":"Runs","AvgScore":"Avg Score","TotalBalls":"Balls",
-        "TotalFours":"4s","TotalSixes":"6s","TeamSR":"SR","BoundaryPct":"Bdry%","SixPct":"Six%","DotPct":"NBall%"})
-    fmt_cols={c:st.column_config.NumberColumn(format="%.1f") for c in ["SR","Avg Score","Bdry%","Six%","NBall%"]}
+        "TotalFours":"4s","TotalSixes":"6s","TeamSR":"SR","BoundaryPct":"Bdry%","SixPct":"Six%"})
+    fmt_cols={c:st.column_config.NumberColumn(format="%.1f") for c in ["SR","Avg Score","Bdry%","Six%"]}
     st.dataframe(show.reset_index(drop=True),use_container_width=True,hide_index=True,column_config=fmt_cols)
 
 def team_bowl_table(df):
